@@ -6,18 +6,18 @@ import argparse
 
 # define valid modes for chirp
 mode_mapping = {
-    "WFM":"WFM",
-    "FM":"FM",
-    "FM Narrow":"NFM",
-    "AM":"AM",
-    "NAM":"NAM",
-    "DN":"DIG",
-    "USB":"USB",
-    "LSB":"LSB",
-    "CW":"CW",
-    "RTTY":"RTTY",
-    "DIG":"DIG",
-    "PKT":"PKT"
+    "WFM": "WFM",
+    "FM": "FM",
+    "FM Narrow": "NFM",
+    "AM": "AM",
+    "NAM": "NAM",
+    "DN": "DIG",
+    "USB": "USB",
+    "LSB": "LSB",
+    "CW": "CW",
+    "RTTY": "RTTY",
+    "DIG": "DIG",
+    "PKT": "PKT",
 }
 
 # Define the column mapping from rtsystems to chirp
@@ -75,7 +75,7 @@ def convert_csv(input_file, output_file):
             writer.writeheader()
 
             for idx, row in enumerate(reader, start=1):
-                # skip empty rows, but incriment the index. 
+                # skip empty rows, but incriment the index.
                 if not row["Receive Frequency"]:
                     continue
                 chirp_row = {
