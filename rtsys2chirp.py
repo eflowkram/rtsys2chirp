@@ -96,7 +96,6 @@ def convert_csv(input_file, output_file):
                         step_str = value
                         step_str = step_str.replace("kHz", "").strip()
                         chirp_row["TStep"] = float(step_str)
-                        print(chirp_row["TStep"])
                     elif field in column_mapping:
                         chirp_row[column_mapping[field]] = value
 
