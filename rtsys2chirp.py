@@ -1,24 +1,14 @@
 #!/usr/bin/env python3
 
+"""
+This requires python 3.10 or later as I figured I'd try a map/case in lieu of if/elif.
+This will convert an exported csv file from rt systems radio programming software to a format 
+that can be ingested by chirp.
+"""
+
 import csv
 import argparse
 
-
-# define valid modes for chirp
-mode_mapping = {
-    "WFM": "WFM",
-    "FM": "FM",
-    "FM Narrow": "NFM",
-    "AM": "AM",
-    "NAM": "NAM",
-    "DN": "DIG",
-    "USB": "USB",
-    "LSB": "LSB",
-    "CW": "CW",
-    "RTTY": "RTTY",
-    "DIG": "DIG",
-    "PKT": "PKT",
-}
 
 # Define the column mapping from rtsystems to chirp
 column_mapping = {
@@ -32,6 +22,22 @@ column_mapping = {
     "Skip": "Skip",
     "TX Power": "Power",
     "Comment": "Comment",
+}
+
+# some mapping for valid values from rt->chirp
+mode_mapping = {
+    "WFM": "WFM",
+    "FM": "FM",
+    "FM Narrow": "NFM",
+    "AM": "AM",
+    "NAM": "NAM",
+    "DN": "DIG",
+    "USB": "USB",
+    "LSB": "LSB",
+    "CW": "CW",
+    "RTTY": "RTTY",
+    "DIG": "DIG",
+    "PKT": "PKT",
 }
 
 duplex_mapping = {"Simplex": "off", "Minus": "-", "Plus": "+"}
@@ -82,28 +88,29 @@ def convert_csv(input_file, output_file):
                     "Location": idx
                 }  # Set the location field to the row number
                 for field, value in row.items():
-                    if field == "Operating Mode":
-                        chirp_row["Mode"] = mode_mapping.get(value, "")
-                    elif field == "Offset Direction":
-                        # lookup duplex map
-                        chirp_row["Duplex"] = duplex_mapping.get(value, "")
-                    elif field == "Tone Mode":
-                        chirp_row["Tone"] = tone_mapping.get(value, "")
-                    elif field == "Skip":
-                        chirp_row["Skip"] = skip_mapping.get(value, "")
-                    # convert step to float
-                    elif field == "Step":
-                        step_str = value
-                        step_str = step_str.replace("kHz", "").strip()
-                        chirp_row["TStep"] = float(step_str)
-                    elif field == "Comment":
-                        if value == "":
-                            chirp_row[field]=row.get("Name")
-                        else:
-                         chirp_row[column_mapping[field]] = value
-                    elif field in column_mapping:
-                        chirp_row[column_mapping[field]] = value
-
+                    match field:
+                        case "Operating Mode":
+                            chirp_row["Mode"] = mode_mapping.get(value, "")
+                        case "Offset Direction":
+                            chirp_row["Duplex"] = duplex_mapping.get(value, "")
+                        case "Tone Mode":
+                            chirp_row["Tone"] = tone_mapping.get(value, "")
+                        case "Skip":
+                            chirp_row["Skip"] = skip_mapping.get(value, "")
+                        # convert step to float
+                        case "Step":
+                            step_str = value
+                            step_str = step_str.replace("kHz", "").strip()
+                            chirp_row["TStep"] = float(step_str)
+                        case "Comment":
+                            match value:
+                                case "":
+                                    chirp_row[field] = row.get("Name")
+                                case _:
+                                    chirp_row[column_mapping[field]] = value
+                        case _:
+                            if field in column_mapping:
+                                chirp_row[column_mapping[field]] = value
                 # Handle CTCSS separately
                 chirp_row["rToneFreq"] = row.get("CTCSS", "")
                 chirp_row["cToneFreq"] = row.get("CTCSS", "")
