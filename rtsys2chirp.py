@@ -58,21 +58,24 @@ additional_fields = ["rToneFreq", "cToneFreq", "DtcsCode", "RxDtcsCode"]
 
 def convert_frequency_to_mhz(value):
     """
-    Convert a frequency value string (e.g., '600 kHz', '5.000 MHz') to a float representing the value in MHz.
+    Convert a frequency value string (e.g., '600 kHz', '5.000 MHz') 
+    to a float representing the value in MHz.
     """
     try:
         value = value.lower()  # Normalize case to lower
         if "khz" in value:
             return float(value.replace("khz", "").strip()) / 1000
-        elif "mhz" in value:
+        if "mhz" in value:
             return float(value.replace("mhz", "").strip())
-        else:
-            return float(value)
+        return float(value)
     except ValueError:
         return 0.0
 
 
 def convert_csv(input_file, output_file):
+    """
+    Main conversion function which takes an input csv and writes an output csv.
+    """
     # Read the input CSV file in rtsystems format
     with open(input_file, mode="r") as infile:
         # Read the header row explicitly
@@ -145,6 +148,9 @@ def convert_csv(input_file, output_file):
 
 
 def main():
+    """
+    Main entry point with argparse parsing.
+    """
     parser = argparse.ArgumentParser(
         description="Convert rtsystems CSV format to chirp CSV format."
     )
