@@ -18,10 +18,11 @@ column_mapping = {
     "Offset Direction": "Duplex",
     "Tone Mode": "Tone",
     "Operating Mode": "Mode",
+    "CTCSS": "",
+    "DCS": "",
     "Step": "TStep",
     "Skip": "Skip",
     "TX Power": "Power",
-    "Comment": "Comment",
 }
 
 # some mapping for valid values from rt->chirp
@@ -55,6 +56,22 @@ skip_mapping = {"Skip": "S", "Scan": "P", "P Scan": "P"}
 additional_fields = ["rToneFreq", "cToneFreq", "DtcsCode", "RxDtcsCode"]
 
 
+def convert_frequency_to_mhz(value):
+    """
+    Convert a frequency value string (e.g., '600 kHz', '5.000 MHz') to a float representing the value in MHz.
+    """
+    try:
+        value = value.lower()  # Normalize case to lower
+        if "khz" in value:
+            return float(value.replace("khz", "").strip()) / 1000
+        elif "mhz" in value:
+            return float(value.replace("mhz", "").strip())
+        else:
+            return float(value)
+    except ValueError:
+        return 0.0
+
+
 def convert_csv(input_file, output_file):
     # Read the input CSV file in rtsystems format
     with open(input_file, mode="r") as infile:
@@ -71,10 +88,12 @@ def convert_csv(input_file, output_file):
             + [
                 column_mapping[field]
                 for field in fieldnames[1:]
-                if field in column_mapping
+                if field in column_mapping and column_mapping[field]
             ]
             + additional_fields
+            + ["Comment"]
         )
+
         # Write to the output CSV file in chirp format
         with open(output_file, mode="w") as outfile:
             writer = csv.DictWriter(outfile, fieldnames=chirp_fieldnames)
@@ -97,11 +116,20 @@ def convert_csv(input_file, output_file):
                             chirp_row["Tone"] = tone_mapping.get(value, "")
                         case "Skip":
                             chirp_row["Skip"] = skip_mapping.get(value, "")
-                        # convert step to float
+                        case "Offset Frequency":
+                            chirp_row[column_mapping[field]] = convert_frequency_to_mhz(
+                                value
+                            )
                         case "Step":
-                            step_str = value
-                            step_str = step_str.replace("kHz", "").strip()
-                            chirp_row["TStep"] = float(step_str)
+                            chirp_row[column_mapping[field]] = (
+                                convert_frequency_to_mhz(value) * 1000
+                            )  # Convert MHz to kHz
+                        case "CTCSS":
+                            chirp_row["rToneFreq"] = value
+                            chirp_row["cToneFreq"] = value
+                        case "DCS":
+                            chirp_row["DtcsCode"] = value
+                            chirp_row["RxDtcsCode"] = value
                         case "Comment":
                             match value:
                                 case "":
@@ -111,13 +139,6 @@ def convert_csv(input_file, output_file):
                         case _:
                             if field in column_mapping:
                                 chirp_row[column_mapping[field]] = value
-                # Handle CTCSS separately
-                chirp_row["rToneFreq"] = row.get("CTCSS", "")
-                chirp_row["cToneFreq"] = row.get("CTCSS", "")
-
-                # Handle DCS separately
-                chirp_row["DtcsCode"] = row.get("DCS", "")
-                chirp_row["RxDtcsCode"] = row.get("DCS", "")
                 writer.writerow(chirp_row)
 
     print("Conversion from rtsystems to chirp format completed successfully.")
