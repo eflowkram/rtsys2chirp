@@ -81,7 +81,7 @@ def convert_csv(input_file, output_file):
             writer.writeheader()
 
             for idx, row in enumerate(reader, start=1):
-                # skip empty rows, but incriment the index.
+                # skip empty rows, but increment the index.
                 if not row["Receive Frequency"]:
                     continue
                 chirp_row = {
